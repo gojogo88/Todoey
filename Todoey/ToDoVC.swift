@@ -12,8 +12,14 @@ class ToDoVC: UITableViewController {
 
   var itemArray = ["Find Mike", "Buy Eggos", "Destroy Demogorgon"]
   
+  let defaults = UserDefaults.standard
+  
   override func viewDidLoad() {
     super.viewDidLoad()
+    
+    if let items = defaults.array(forKey: "ToDoListArray") as? [String] {
+      itemArray = items
+    }
 
   }
 
@@ -51,16 +57,21 @@ class ToDoVC: UITableViewController {
       //what will happen when Add Item is clicked
       if let textfield = textfield.text {
         self.itemArray.append(textfield)
+        self.defaults.set(self.itemArray, forKey: "ToDoListArray")
         self.tableView.reloadData()
       }
     }
+    
+    let cancelAction = UIAlertAction(title: "Cancel", style: .cancel)
     
     alert.addTextField { (alertTextField) in
       alertTextField.placeholder = "Create new item"
       textfield = alertTextField
     }
     
+    
     alert.addAction(action)
+    alert.addAction(cancelAction)
     present(alert, animated: true, completion: nil)
   }
   
