@@ -12,28 +12,29 @@ class ToDoVC: UITableViewController {
 
   var itemArray = [Item]()
   
-  
-  let defaults = UserDefaults.standard
+  let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
   
   override func viewDidLoad() {
     super.viewDidLoad()
     
-    let newItem = Item()
-    newItem.title = "Find Mike"
-    newItem.done = true
-    itemArray.append(newItem)
+//    let newItem = Item()
+//    newItem.title = "Find Mike"
+//    newItem.done = true
+//    itemArray.append(newItem)
+//    
+//    let newItem2 = Item()
+//    newItem2.title = "Buy Eggos"
+//    itemArray.append(newItem2)
+//
+//    let newItem3 = Item()
+//    newItem3.title = "Destroy Demogorgon"
+//    itemArray.append(newItem3)
     
-    let newItem2 = Item()
-    newItem2.title = "Buy Eggos"
-    itemArray.append(newItem2)
+    loadItems()
 
-    let newItem3 = Item()
-    newItem3.title = "Destroy Demogorgon"
-    itemArray.append(newItem3)
-
-    if let items = defaults.array(forKey: "ToDoListArray") as? [Item] {
-      itemArray = items
-    }
+//    if let items = defaults.array(forKey: "ToDoListArray") as? [Item] {
+//      itemArray = items
+//    }
 
   }
 
@@ -70,8 +71,7 @@ class ToDoVC: UITableViewController {
 //    else {
 //      itemArray[indexPath.row].done = false
 //    }
-    
-    tableView.reloadData()
+    saveItems()
     tableView.deselectRow(at: indexPath, animated: true)
   }
   
@@ -83,13 +83,11 @@ class ToDoVC: UITableViewController {
     let alert = UIAlertController(title: "Add New Todoey Item", message: "", preferredStyle: .alert)
     let action = UIAlertAction(title: "Add Item", style: .default) { (action) in
       //what will happen when Add Item is clicked
-      if let textfield = textfield.text {
+      
         let newItem = Item()
-        newItem.title = textfield
+        newItem.title = textfield.text!
         self.itemArray.append(newItem)
-        self.defaults.set(self.itemArray, forKey: "ToDoListArray")
-        self.tableView.reloadData()
-      }
+        self.saveItems()
     }
     
     let cancelAction = UIAlertAction(title: "Cancel", style: .cancel)
@@ -99,10 +97,32 @@ class ToDoVC: UITableViewController {
       textfield = alertTextField
     }
     
-    
     alert.addAction(action)
     alert.addAction(cancelAction)
     present(alert, animated: true, completion: nil)
+  }
+  
+  //Mark - Manipulation Methods
+  func saveItems() {
+    let encoder = PropertyListEncoder()
+    do {
+      let data = try encoder.encode(itemArray)
+      try data.write(to: dataFilePath!)
+    } catch {
+      print("Error encoding item array, \(error)")
+    }
+    self.tableView.reloadData()
+  }
+  
+  func loadItems() {
+    if let data = try? Data(contentsOf: dataFilePath!) {
+      let decoder = PropertyListDecoder()
+      do {
+        itemArray =  try decoder.decode([Item].self, from: data)
+      } catch {
+        print("Error decoding item array, \(error)")
+      }
+    }
   }
   
 }
