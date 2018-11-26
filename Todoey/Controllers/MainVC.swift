@@ -7,30 +7,20 @@
 //
 
 import UIKit
-import CoreData
+import RealmSwift
 
 class MainVC: UIViewController {
-
+  
+  let realm = try! Realm()
+  var categories: Results<Category>?
+  
   @IBOutlet var tableView: UITableView!
-  var catArray = [Category]()
   
-    override func viewDidLoad() {
-      super.viewDidLoad()
-      tableView.isHidden = false
-      loadCoreDataObjects()
-    }
-  
-  func loadCoreDataObjects() {
-    self.fetchData { (complete) in
-      if complete {
-        if catArray.count >= 1 {
-          tableView.isHidden = false
-        } else {
-          tableView.isHidden = true
-        }
-      }
-    }
+  override func viewDidLoad() {
+    super.viewDidLoad()
+    loadCategories()
   }
+  
   
   // MARK: - Add New Category
   @IBAction func addCatBtnPressed(_ sender: UIBarButtonItem) {
@@ -39,15 +29,14 @@ class MainVC: UIViewController {
     let alert = UIAlertController(title: "Add New ToDoey Category", message: "", preferredStyle: .alert)
     let action = UIAlertAction(title: "Add", style: .default) { (action) in
       //what will happen when Add Category is clicked
-      let newCat = Category(context: context)
+      let newCat = Category()
       newCat.name = textfield.text!
-      if let _ = self.catArray.first(where: { $0.name?.lowercased() == newCat.name?.lowercased()}){
+      if let _ = self.categories?.first(where: { $0.name.lowercased() == newCat.name.lowercased()}){
         print("Found duplicate \(String(describing: newCat.name))")
         return
       }
       
-      self.catArray.append(newCat)
-      self.saveData()
+      self.saveToRealm(category: newCat)
     }
     
     let cancelAction = UIAlertAction(title: "Cancel", style: .cancel)
@@ -65,7 +54,7 @@ class MainVC: UIViewController {
   override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
     let desinationVC = segue.destination as! ToDoVC
     guard let indexPath = tableView.indexPathForSelectedRow else { return }
-    desinationVC.selectedCategory = catArray[indexPath.row]
+    desinationVC.selectedCategory = categories?[indexPath.row]
     
   }
 }
@@ -73,12 +62,12 @@ class MainVC: UIViewController {
 // MARK: - Tableview Datasource and Delegate Methods
 extension MainVC: UITableViewDataSource, UITableViewDelegate {
   func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-    return catArray.count
+    return categories?.count ?? 1
   }
   
   func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
     let cell = tableView.dequeueReusableCell(withIdentifier: "categoryCell", for: indexPath)
-    cell.textLabel?.text = catArray[indexPath.row].name
+    cell.textLabel?.text = categories?[indexPath.row].name ?? "No Categories Added Yet."
     return cell
   }
   
@@ -89,23 +78,20 @@ extension MainVC: UITableViewDataSource, UITableViewDelegate {
 
 // MARK: - Data Manipulation Methods
 extension MainVC {
-  func saveData() {
+  func saveToRealm(category: Category) {
     do {
-      try context.save()
+      try realm.write {
+        realm.add(category)
+      }
     } catch {
       print("Error saving context, \(error.localizedDescription)")
     }
     self.tableView.reloadData()
   }
   
-  func fetchData(completion: (_ complete: Bool) ->()) {
-    let request = NSFetchRequest<Category>(entityName: "Category")
-    do {
-      catArray = try context.fetch(request)
-      completion(true)
-    } catch {
-      print("Error fetching data from context, \(error.localizedDescription)")
-      completion(false)
-    }
+  func loadCategories() {
+    categories = realm.objects(Category.self)
+    
+    tableView.reloadData()
   }
 }
