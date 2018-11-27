@@ -8,6 +8,7 @@
 
 import UIKit
 import RealmSwift
+import ChameleonFramework
 
 class CategoryVC: SwipeTableViewController {
 
@@ -28,8 +29,12 @@ class CategoryVC: SwipeTableViewController {
   
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
       let cell = super.tableView(tableView, cellForRowAt: indexPath)
-      
-      cell.textLabel?.text = categories?[indexPath.row].name ?? "No Categories Added Yet."
+      if let category = categories?[indexPath.row] {
+        cell.textLabel?.text = category.name
+        guard let categoryColour = UIColor(hexString: category.colour) else { fatalError() }
+        cell.backgroundColor = categoryColour
+        cell.textLabel?.textColor = ContrastColorOf(backgroundColor: categoryColour, returnFlat: true)
+      }
       return cell
     }
   
@@ -54,6 +59,8 @@ class CategoryVC: SwipeTableViewController {
       //what will happen when Add Category is clicked
       let newCat = Category()
       newCat.name = textfield.text!
+      newCat.colour = UIColor.randomFlat().hexValue()
+      
       if let _ = self.categories?.first(where: { $0.name.lowercased() == newCat.name.lowercased()}){
         print("Found duplicate \(String(describing: newCat.name))")
         return

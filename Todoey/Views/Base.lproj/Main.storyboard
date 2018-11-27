@@ -34,7 +34,6 @@
                     </tableView>
                     <navigationItem key="navigationItem" title="ToDoey" id="N7j-n4-mfr">
                         <barButtonItem key="rightBarButtonItem" systemItem="add" id="Mba-Hj-Lga">
-                            <color key="tintColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                             <connections>
                                 <action selector="addCatBtnPressed:" destination="bCi-Ce-x6H" id="XQQ-8d-GgM"/>
                             </connections>
@@ -81,12 +80,14 @@
                     </tableView>
                     <navigationItem key="navigationItem" title="Items" id="Khh-2c-fBn">
                         <barButtonItem key="rightBarButtonItem" systemItem="add" id="Qv2-7L-q3a">
-                            <color key="tintColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                             <connections>
                                 <action selector="addBtnPressed:" destination="QcM-9J-02C" id="NiR-zQ-sw6"/>
                             </connections>
                         </barButtonItem>
                     </navigationItem>
+                    <connections>
+                        <outlet property="searchBar" destination="K3J-A1-N4F" id="5K3-3j-JfB"/>
+                    </connections>
                 </tableViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="xCx-Mo-7ch" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
