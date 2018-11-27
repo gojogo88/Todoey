@@ -9,7 +9,7 @@
 import UIKit
 import RealmSwift
 
-class ToDoVC: UITableViewController {
+class ToDoVC: SwipeTableViewController {
 
   let realm = try! Realm()
   var todoItems: Results<Item>?
@@ -22,7 +22,7 @@ class ToDoVC: UITableViewController {
   
   override func viewDidLoad() {
     super.viewDidLoad()
-    
+
   }
 
   // MARK: - Tableview Datasource Methods
@@ -31,8 +31,8 @@ class ToDoVC: UITableViewController {
   }
   
   override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-    let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoItemCell", for: indexPath)
-    
+    let cell = super.tableView(tableView, cellForRowAt: indexPath)
+
     if let item = todoItems?[indexPath.row] {
       cell.textLabel?.text = item.title
       cell.accessoryType = item.done ? .checkmark : .none
@@ -69,21 +69,21 @@ class ToDoVC: UITableViewController {
     let alert = UIAlertController(title: "Add New Todoey Item", message: "", preferredStyle: .alert)
     let action = UIAlertAction(title: "Add Item", style: .default) { (action) in
       //what will happen when Add Item is clicked
+      if let currentCategory = self.selectedCategory {
+        let newItem = Item()
+        newItem.title = textfield.text!
+        newItem.dateCreated = Date()
       
-      guard let currentCategory = self.selectedCategory else { return }
-      do {
-        try self.realm.write {
-          let newItem = Item()
-          newItem.title = textfield.text!
-          newItem.dateCreated = Date()
-          currentCategory.items.append(newItem)
+        do {
+          try self.realm.write {
+            currentCategory.items.append(newItem)
+          }
+        } catch {
+          print("Error saving new item, \(error.localizedDescription)")
         }
-      } catch {
-        print("Error saving new item, \(error.localizedDescription)")
       }
       self.tableView.reloadData()
     }
-
     let cancelAction = UIAlertAction(title: "Cancel", style: .cancel)
 
     alert.addTextField { (alertTextField) in
@@ -100,6 +100,20 @@ class ToDoVC: UITableViewController {
   func loadItems() {
     todoItems = selectedCategory?.items.sorted(byKeyPath: "title", ascending: true)
     tableView.reloadData()
+  }
+  
+  //: MARK - Delete Data from Swipe
+  override func updateModel(at indexPath: IndexPath) {
+    super.updateModel(at: indexPath)
+    
+    guard let itemForDeletion = todoItems?[indexPath.row] else { return }
+    do {
+      try realm.write {
+        realm.delete(itemForDeletion)
+      }
+    } catch {
+      print("Error deleting category, \(error.localizedDescription)")
+    }
   }
 
 }
